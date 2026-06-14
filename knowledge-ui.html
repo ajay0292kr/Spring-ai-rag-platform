@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Base Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            max-width: 1400px;
+            width: 100%;
+            height: 90vh;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .main-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-label {
+            display: block;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .file-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .documents-section h3 {
+            color: #333;
+            font-size: 16px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .document-item {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .document-name {
+            flex: 1;
+            color: #333;
+            font-size: 14px;
+            word-break: break-word;
+        }
+
+        .document-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-reindex {
+            background: #4facfe;
+            color: white;
+        }
+
+        .btn-reindex:hover {
+            background: #0080ff;
+        }
+
+        .btn-delete {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #ff5252;
+        }
+
+        .main-panel h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .search-section {
+            margin-bottom: 25px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-section input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-section input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-search {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-search:active {
+            transform: translateY(0);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 2px;
+        }
+
+        .loading {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .loading span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: bounce 1.4s ease infinite;
+        }
+
+        .loading span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+            40% {
+                opacity: 1;
+                transform: translateY(-10px);
+            }
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 15px;
+        }
+
+        .input-section input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .input-section input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-send {
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-send:hover {
+            background: #764ba2;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .status-uploaded {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-indexed {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            text-align: center;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+        }
+
+        .upload-status {
+            margin-top: 10px;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .upload-status.show {
+            display: block;
+        }
+
+        .upload-status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .upload-status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>📚 Knowledge Base</h2>
+
+            <div class="upload-section">
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" accept=".pdf,.docx,.xlsx,.txt,.csv">
+                    <label for="fileInput" class="file-label">
+                        📤 Upload Document
+                    </label>
+                </div>
+                <div id="uploadStatus" class="upload-status"></div>
+            </div>
+
+            <div class="documents-section">
+                <h3>📄 Uploaded Documents</h3>
+                <div id="documentsList">
+                    <div style="color: #999; font-size: 14px; padding: 10px;">
+                        No documents uploaded yet
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chat Panel -->
+        <div class="main-panel">
+            <h1>🔍 Knowledge Search Assistant</h1>
+
+            <div class="search-section">
+                <input type="text" id="searchInput" placeholder="Ask a question or search your knowledge base...">
+                <button class="btn-search" onclick="performSearch()">Search</button>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="30" r="15" stroke="currentColor" stroke-width="2"/>
+                            <path d="M 35 50 Q 50 65 65 50" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path d="M 20 70 Q 50 85 80 70" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>
+                        <div>
+                            <h3>Welcome to Knowledge Base Assistant</h3>
+                            <p>Upload documents to get started or search existing knowledge</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-section">
+                    <input type="text" id="chatInput" placeholder="Type your question...">
+                    <button class="btn-send" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8082/api';
+
+        // Load documents on page load
+        window.addEventListener('DOMContentLoaded', loadDocuments);
+
+        // File upload handler
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+        // Search enter key
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+
+        // Chat input enter key
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        async function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.classList.add('show');
+            statusDiv.textContent = '⏳ Uploading...';
+            statusDiv.classList.remove('success', 'error');
+
+            try {
+                const response = await fetch(`${API_BASE}/documents`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    statusDiv.textContent = '✅ Upload successful!';
+                    statusDiv.classList.add('success');
+                    document.getElementById('fileInput').value = '';
+                    setTimeout(loadDocuments, 500);
+                } else {
+                    throw new Error('Upload failed');
+                }
+            } catch (error) {
+                statusDiv.textContent = '❌ Upload failed: ' + error.message;
+                statusDiv.classList.add('error');
+            }
+
+            setTimeout(() => {
+                statusDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        async function loadDocuments() {
+            try {
+                const response = await fetch(`${API_BASE}/documents`);
+                const documents = await response.json();
+                const list = document.getElementById('documentsList');
+
+                if (documents.length === 0) {
+                    list.innerHTML = '<div style="color: #999; font-size: 14px; padding: 10px;">No documents uploaded yet</div>';
+                    return;
+                }
+
+                list.innerHTML = documents.map(doc => `
+                    <div class="document-item">
+                        <div class="document-name">
+                            📄 ${doc.filename}
+                            <span class="status-badge ${doc.status === 'INDEXED' ? 'status-indexed' : 'status-uploaded'}">
+                                ${doc.status}
+                            </span>
+                        </div>
+                        <div class="document-actions">
+                            <button class="btn-small btn-reindex" onclick="reindexDocument(${doc.id})" title="Re-index document">🔄</button>
+                            <button class="btn-small btn-delete" onclick="deleteDocument(${doc.id})" title="Delete document">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading documents:', error);
+            }
+        }
+
+        async function reindexDocument(docId) {
+            try {
+                const response = await fetch(`${API_BASE}/documents/${docId}/reindex`, {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    addMessage('assistant', '✅ Document re-indexed successfully!');
+                    setTimeout(loadDocuments, 500);
+                }
+            } catch (error) {
+                addMessage('assistant', '❌ Re-index failed: ' + error.message);
+            }
+        }
+
+        async function deleteDocument(docId) {
+            if (!confirm('Delete this document?')) return;
+
+            try {
+                await fetch(`${API_BASE}/documents/${docId}`, {
+                    method: 'DELETE'
+                });
+                addMessage('assistant', '✅ Document deleted!');
+                setTimeout(loadDocuments, 500);
+            } catch (error) {
+                addMessage('assistant', '❌ Delete failed: ' + error.message);
+            }
+        }
+
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
+
+            addMessage('user', query);
+            addMessage('assistant', '<div class="loading"><span></span><span></span><span></span></div>');
+
+            try {
+                const response = await fetch(`${API_BASE}/documents/query`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        topK: 5
+                    })
+                });
+
+                const data = await response.json();
+                const lastMsg = document.querySelector('.message:last-child');
+                if (lastMsg) lastMsg.remove();
+
+                if (response.ok && data.response) {
+                    addMessage('assistant', data.response);
+                } else {
+                    addMessage('assistant', 'Error: Could not retrieve response from knowledge base. Make sure documents are uploaded and Ollama is running.');
+                }
+            } catch (error) {
+                const lastMsg = document.querySelector('.message:last-child');
+                if (lastMsg) lastMsg.remove();
+                addMessage('assistant', '❌ Error: ' + error.message);
+            }
+
+            document.getElementById('searchInput').value = '';
+        }
+
+        function sendMessage() {
+            const message = document.getElementById('chatInput').value.trim();
+            if (!message) return;
+
+            addMessage('user', message);
+            addMessage('assistant', '<div class="loading"><span></span><span></span><span></span></div>');
+
+            // Call backend RAG endpoint
+            fetch(`${API_BASE}/documents/query`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    query: message,
+                    topK: 5
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const lastMsg = document.querySelector('.message:last-child');
+                if (lastMsg) lastMsg.remove();
+
+                if (data.response) {
+                    addMessage('assistant', data.response);
+                } else {
+                    addMessage('assistant', 'Error: Could not retrieve response from knowledge base. Make sure documents are uploaded and Ollama is running.');
+                }
+            })
+            .catch(error => {
+                const lastMsg = document.querySelector('.message:last-child');
+                if (lastMsg) lastMsg.remove();
+                addMessage('assistant', '❌ Error: ' + error.message);
+            });
+
+            document.getElementById('chatInput').value = '';
+        }
+
+        function addMessage(sender, content) {
+            const messagesContainer = document.getElementById('chatMessages');
+
+            // Remove empty state if present
+            const emptyState = messagesContainer.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>
+
